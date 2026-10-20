@@ -91,6 +91,10 @@ nav button.on{color:var(--ac)}
       <div class="line"><span>ক্যাশ</span><b id="r-k">0</b></div>
       <div class="line"><span>অন্যান্য</span><b id="r-o">0</b></div></div>
     <div class="card"><h2>দিনভিত্তিক তালিকা</h2><div id="list"></div></div>
+    <div class="card"><h2>নতুন করে শুরু</h2>
+      <div class="mu">আগের সব হিসাব, মূলধন ও রিপোর্টের ডেটা মুছে নতুন করে শুরু করবেন।</div>
+      <button class="btn" style="background:#d93025" onclick="resetAll()">🗑️ সব ডেটা রিসেট করুন</button>
+    </div>
   </div>
 </div>
 <nav>
@@ -115,6 +119,12 @@ S.oth=S.oth||[];
 if(!S.cv){var CM={20:18.8,30:28.25,40:38,50:48};S.cards.forEach(function(r){if(CM[r.l])r.l=CM[r.l]});S.cv=1}
 if(!S.capList){S.capList=[];if(num(S.cap)>0)S.capList.push({d:today(),a:num(S.cap),n:'আগের মূলধন'})}
 function save(){try{localStorage.setItem('rayta3',JSON.stringify(S));localStorage.setItem('rayta_h',JSON.stringify(H))}catch(e){}}
+function resetAll(){
+  if(!confirm('সব ডেটা মুছে যাবে এবং আর ফেরত পাওয়া যাবে না। নিশ্চিত?'))return;
+  if(!confirm('শেষবার জিজ্ঞাসা: সত্যিই রিসেট করবেন?'))return;
+  try{['rayta3','rayta','rayta_h'].forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+  location.reload();
+}
 function capTotal(){var t=0;S.capList.forEach(function(e){t+=num(e.a)});return t}
 function go(p){
   document.querySelectorAll('.page').forEach(function(e){e.classList.remove('on')});
