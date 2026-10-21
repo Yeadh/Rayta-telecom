@@ -52,6 +52,9 @@ nav button.on{color:var(--ac)}
 .pos{color:var(--ok)}.neg{color:var(--bad)}
 .h{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}
 .h:last-child{border:0}
+.hw{border-bottom:1px solid var(--bd)}.hw:last-child{border:0}.hw .h{border:0}
+.dd{display:none;background:var(--bg);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:13px}.dd.on{display:block}
+.dd .gh{font-weight:700;display:flex;justify-content:space-between;margin-top:6px}
 
 .lbl{width:118px}
 </style>
@@ -191,6 +194,13 @@ function saveDay(){
   if(H[d]&&!confirm('আজকের হিসাব আগেই সেভ করা আছে। নতুন হিসাব তার সাথে যোগ হবে। ঠিক আছে?'))return;
   var e={};['c','l','m','k','b','o'].forEach(function(f){e[f]=t[f]+(o[f]||0)});
   e.g=e.c+e.l+e.m+e.k+e.b+e.o;e.cap=capTotal();e.p=e.g-capTotal();
+  var prev=o.sess||(H[d]?[{t:'',tot:{c:o.c||0,l:o.l||0,m:o.m||0,k:o.k||0,b:o.b||0,o:o.o||0}}]:[]);
+  var items=[];
+  G.forEach(function(g){S[g[0]].forEach(function(r){if(r.v===''||r.v==null)return;var v=num(r.v);
+    if(g[0]==='cards')items.push({k:'cards',l:r.l,q:v,v:num(r.l)*v});else items.push({k:g[0],l:r.l,v:v})})});
+  var tm=new Date();
+  var cp=[];S.capList.forEach(function(c,n){if(c.a!==''&&c.a!=null)cp.push({l:c.n||('মূলধন '+fmt(n+1)),v:num(c.a)})});
+  e.sess=prev.concat([{t:('0'+tm.getHours()).slice(-2)+':'+('0'+tm.getMinutes()).slice(-2),i:items,cp:cp}]);
   H[d]=e;
   G.forEach(function(g){S[g[0]].forEach(function(r){r.v=''})});
   render();window.scrollTo(0,0);
@@ -221,8 +231,32 @@ function report(){
   document.getElementById('bn').textContent=monthly?'মাস অনুযায়ী লাভ':'দিন অনুযায়ী লাভ';
   document.getElementById('list').innerHTML=keys.length?keys.slice().reverse().map(function(x){
     var e=H[x];
-    return '<div class="h"><div><b>'+new Date(x).toLocaleDateString('bn-BD',{day:'numeric',month:'short',year:'numeric'})+'</b><div class="mu">বিক্রি '+fmt(e.g)+' · মূলধন '+fmt(e.cap)+'</div></div><div style="display:flex;align-items:center;gap:6px"><b class="'+(e.p<0?'neg':'pos')+'">'+fmt(e.p)+'</b><button class="x" onclick="delDay(\''+x+'\')">×</button></div></div>';
+    return '<div class="hw"><div class="h"><div style="cursor:pointer;flex:1" onclick="togDay(\''+x+'\')"><b>'+new Date(x).toLocaleDateString('bn-BD',{day:'numeric',month:'short',year:'numeric'})+'</b> <span class="mu">▾ বিস্তারিত</span><div class="mu">বিক্রি '+fmt(e.g)+' · মূলধন '+fmt(e.cap)+'</div></div><div style="display:flex;align-items:center;gap:6px"><b class="'+(e.p<0?'neg':'pos')+'">'+fmt(e.p)+'</b><button class="x" onclick="delDay(\''+x+'\')">×</button></div></div><div class="dd" id="dd-'+x+'"></div></div>';
   }).join(''):'<div class="mu">কোনো তথ্য নেই। হিসাব পেজে "সেভ করুন" চাপুন।</div>';
+}
+function dayDetail(x){
+  var e=H[x],TL={c:'কার্ডস',l:'লোড',m:'মোবাইল ব্যাংকিং',k:'ক্যাশ',b:'বাকি',o:'অন্যান্য'};
+  var ss=e.sess||[{t:'',tot:{c:e.c,l:e.l,m:e.m,k:e.k,b:e.b,o:e.o}}];
+  var multi=ss.length>1,h='';
+  var ln=function(a,b){return '<div class="line" style="padding:3px 0"><span>'+a+'</span><span>'+fmt(b)+'</span></div>'};
+  ss.forEach(function(s,n){
+    if(multi)h+='<div class="mu" style="margin:8px 0 2px;border-top:1px dashed var(--bd);padding-top:6px">'+(s.t?'সেভ '+fmt(n+1)+' · '+s.t:'আগের সেভ')+'</div>';
+    if(s.tot){
+      for(var f in TL){if(num(s.tot[f])>0)h+=ln(TL[f],s.tot[f])}
+      h+='<div class="mu">এই সেভে আলাদা লেনদেন রাখা ছিল না, শুধু খাতভিত্তিক মোট আছে।</div>';
+    }else{
+      s.i.forEach(function(r){h+=ln(r.k==='cards'?lab(r.l)+' × '+fmt(r.q):r.l,r.v)});
+      if(s.cp&&s.cp.length){
+        s.cp.forEach(function(r){h+=ln(r.l,r.v)});
+      }
+    }
+  });
+  return h||'<div class="mu">কোনো লেনদেন নেই</div>';
+}
+function togDay(x){
+  var el=document.getElementById('dd-'+x);
+  if(!el.classList.contains('on'))el.innerHTML=dayDetail(x);
+  el.classList.toggle('on');
 }
 function delDay(k){if(confirm('এই দিনের হিসাব মুছবেন?')){delete H[k];save();report()}}
 render();
